@@ -1,0 +1,62 @@
+/* ============================================
+   RESPONSIVE — Mobile First Breakpoints
+   ============================================ */
+
+/* ---------- TABLET (max 768px) ---------- */
+@media (max-width: 768px) {
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-2xl); }
+  h3 { font-size: var(--text-xl); }
+
+  .container {
+    padding: 0 var(--space-4);
+  }
+
+  .section {
+    padding: var(--space-12) 0;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: var(--space-6);
+  }
+
+  .section-title {
+    font-size: var(--text-2xl);
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .hide-mobile { display: none !important; }
+}
+
+/* ---------- SMALL TABLET (max 640px) ---------- */
+@media (max-width: 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- TABLET LANDSCAPE (min 641px, max 1024px) ---------- */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+
+  .hide-tablet { display: none !important; }
+}
+
+/* ---------- DESKTOP (min 769px) ---------- */
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+}
+
+/* ---------- DESKTOP LARGE (min 1025px) ---------- */
+@media (min-width: 1025px) {
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+}
