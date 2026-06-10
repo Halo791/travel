@@ -1,0 +1,74 @@
+version: "3.3"
+
+services:
+  traefik:
+    image: traefik:v2.11
+    container_name: travel-traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL:-admin@ingenio.id}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.server
+    container_name: travel-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.travel-web.rule=Host(`travel.ingenio.id`)
+      - traefik.http.routers.travel-web.entrypoints=websecure
+      - traefik.http.routers.travel-web.tls=true
+      - traefik.http.routers.travel-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.travel-web.priority=1
+      - traefik.http.services.travel-web.loadbalancer.server.port=80
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.server
+    container_name: travel-backend
+    restart: unless-stopped
+    environment:
+      APP_NAME: Travel
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_URL: https://travel.ingenio.id
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/storage/database.sqlite
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stack
+    volumes:
+      - backend-storage:/app/storage
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.travel-api.rule=Host(`travel.ingenio.id`) && PathPrefix(`/api`)
+      - traefik.http.routers.travel-api.entrypoints=websecure
+      - traefik.http.routers.travel-api.tls=true
+      - traefik.http.routers.travel-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.travel-api.priority=10
+      - traefik.http.services.travel-api.loadbalancer.server.port=8000
+
+volumes:
+  backend-storage:
+  traefik-letsencrypt:

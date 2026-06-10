@@ -1,7 +1,7 @@
 /**
  * API Client wrapper for Fetch requests
  */
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('auth_token');

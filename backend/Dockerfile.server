@@ -1,0 +1,23 @@
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+COPY . .
+RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+FROM php:8.4-cli-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache sqlite-dev \
+    && docker-php-ext-install pdo_sqlite
+
+COPY --from=vendor /app /app
+COPY docker-entrypoint.server.sh /usr/local/bin/docker-entrypoint
+
+RUN chmod +x /usr/local/bin/docker-entrypoint
+
+EXPOSE 8000
+
+ENTRYPOINT ["docker-entrypoint"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
