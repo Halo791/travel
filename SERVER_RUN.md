@@ -30,6 +30,8 @@ Paste the generated value into `APP_KEY` in `.env`.
 
 ## 3. Start
 
+If this project should run its own Traefik:
+
 ```sh
 docker compose -f docker-compose.server.yml up -d --build
 ```
@@ -38,6 +40,19 @@ For older Compose installations:
 
 ```sh
 docker-compose -f docker-compose.server.yml up -d --build
+```
+
+If the server already has a Traefik container using ports `80` and `443`, use the existing Traefik instead:
+
+```sh
+docker inspect traefik --format '{{range $k,$v := .NetworkSettings.Networks}}{{println $k}}{{end}}'
+TRAEFIK_NETWORK=YOUR_TRAEFIK_NETWORK docker compose -f docker-compose.server.existing-traefik.yml up -d --build
+```
+
+For older Compose installations:
+
+```sh
+TRAEFIK_NETWORK=YOUR_TRAEFIK_NETWORK docker-compose -f docker-compose.server.existing-traefik.yml up -d --build
 ```
 
 ## 4. Check

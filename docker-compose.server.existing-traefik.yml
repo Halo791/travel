@@ -1,0 +1,64 @@
+version: "3.3"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.server
+    container_name: travel-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+      - traefik.http.routers.travel-web.rule=Host(`travel.ingenio.id`)
+      - traefik.http.routers.travel-web.entrypoints=websecure
+      - traefik.http.routers.travel-web.tls=true
+      - traefik.http.routers.travel-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.travel-web.priority=1
+      - traefik.http.services.travel-web.loadbalancer.server.port=80
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.server
+    container_name: travel-backend
+    restart: unless-stopped
+    environment:
+      APP_NAME: Travel
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_URL: https://travel.ingenio.id
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/storage/database.sqlite
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      LOG_CHANNEL: stack
+    volumes:
+      - backend-storage:/app/storage
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+      - traefik.http.routers.travel-api.rule=Host(`travel.ingenio.id`) && PathPrefix(`/api`)
+      - traefik.http.routers.travel-api.entrypoints=websecure
+      - traefik.http.routers.travel-api.tls=true
+      - traefik.http.routers.travel-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.travel-api.priority=10
+      - traefik.http.services.travel-api.loadbalancer.server.port=8000
+
+volumes:
+  backend-storage:
+
+networks:
+  traefik:
+    external:
+      name: ${TRAEFIK_NETWORK:-traefik}
