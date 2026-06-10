@@ -5,9 +5,9 @@ export class Router {
   constructor() {
     this.routes = {};
     this.currentPage = null;
+    this.renderToken = 0;
     
     window.addEventListener('hashchange', () => this.handleRoute());
-    window.addEventListener('load', () => this.handleRoute());
   }
 
   register(path, pageComponent) {
@@ -22,6 +22,7 @@ export class Router {
   }
 
   async handleRoute() {
+    const renderToken = ++this.renderToken;
     let hash = window.location.hash || '#/';
     let pageComponent = this.routes[hash];
     let params = {};
@@ -75,6 +76,9 @@ export class Router {
         this.currentPage = page;
         contentDiv.innerHTML = '';
         const renderedEl = await page.render();
+        if (renderToken !== this.renderToken) return;
+
+        contentDiv.innerHTML = '';
         if (typeof renderedEl === 'string') {
           contentDiv.innerHTML = renderedEl;
         } else if (renderedEl instanceof HTMLElement) {
